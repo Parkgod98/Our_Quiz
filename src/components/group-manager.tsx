@@ -34,7 +34,7 @@ export function GroupManager({ groups, versions, assignments }: { groups: GroupO
 
     {groups.some((group) => group.isOwner) && versions.length > 0 && <div className="panel stack"><h2>문제 Version 배정</h2><label>그룹<select value={groupId} onChange={(event) => setGroupId(event.target.value)}>{groups.filter((group) => group.isOwner).map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label><label>Version<select value={versionId} onChange={(event) => setVersionId(event.target.value)}>{versions.map((version) => <option key={version.id} value={version.id}>{version.label}</option>)}</select></label><button disabled={!groupId || !versionId} onClick={() => post("/api/groups/assign", { groupId, versionId })}>배정</button></div>}
 
-    {assignments.length > 0 && <div className="panel stack"><h2>배정된 문제</h2>{assignments.map((assignment) => <div className="list-row" key={`${assignment.groupId}-${assignment.versionId}`}><strong>{assignment.label}</strong><Link className="button-link" href={`/quiz/${assignment.versionId}`}>Start</Link></div>)}</div>}
+    {assignments.length > 0 && <div className="panel stack"><h2>배정된 문제</h2>{assignments.map((assignment) => <div className="list-row" key={`${assignment.groupId}-${assignment.versionId}`}><strong>{assignment.label}</strong><Link className="button-link" href={`/quiz/${assignment.versionId}?groupId=${assignment.groupId}`}>Start</Link></div>)}</div>}
     {message && <p className="notice">{message}</p>}
   </div>;
 }
