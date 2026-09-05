@@ -13,9 +13,16 @@
 - `src/components/auth-form.tsx`
 - `src/app/api/auth/reset-password/route.ts`
 - `.env.example`
+- `docs/work-logs/2026-09-05-password-reset.md`
 
 ## 검증
-- PR CI에서 `validate`, `validate:git`, `lint`, `build`를 확인할 예정.
+- Core E2E는 성공함.
+- Repository harness와 Question Set validation은 성공함.
+- 최초 CI는 PR 본문의 필수 `## 참고` 섹션 누락으로 `validate:git`에서 실패함.
+- PR 본문을 템플릿 요구사항에 맞게 수정함.
+- 실패한 기존 Workflow Run을 단순 재실행하면 GitHub가 최초 `pull_request` 이벤트 payload를 그대로 사용해 수정 전 PR 본문을 다시 검증하므로 동일 실패가 반복됨을 확인함.
+- 본 로그 커밋으로 새 `synchronize` 이벤트를 발생시켜 최신 PR 본문을 기준으로 `validate:git`, `lint`, `build`를 새로 검증함.
 
 ## 남은 점
 - 배포 환경에 `SUPABASE_SECRET_KEY`를 서버 전용 환경 변수로 추가해야 실제 초기화가 동작함.
+- 새 CI 결과가 모두 성공하는지 확인 후 merge할 수 있음.
