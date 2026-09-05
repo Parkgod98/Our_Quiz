@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "validate:questions": "node scripts/validate-question-sets.mjs",
-    "validate": "npm run validate:questions"
+    "validate:repo": "node scripts/validate-repository.mjs",
+    "validate": "npm run validate:repo && npm run validate:questions"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",
