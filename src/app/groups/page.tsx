@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { GroupDirectory, type GroupSummary } from "@/components/group-directory";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -30,6 +29,6 @@ export default async function GroupsPage() {
 
   return <section className="stack page-section">
     <div className="page-heading"><span className="eyebrow">스터디</span><h1>내 스터디</h1><p>참여 중인 스터디를 확인하고 함께 풀 문제를 관리해 보세요.</p></div>
-    {groups.length === 0 ? <div className="empty-state"><h2>참여 중인 스터디가 없어요.</h2><p>새 스터디를 만들거나 초대 코드로 참여해 보세요.</p><Link className="text-link" href="/groups">스터디 시작하기</Link></div> : <GroupDirectory groups={groups} />}
+    <GroupDirectory groups={groups} />
   </section>;
 }
