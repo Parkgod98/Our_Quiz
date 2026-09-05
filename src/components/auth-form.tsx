@@ -66,7 +66,7 @@ export function AuthForm({ configured, initialMode = "login" }: { configured: bo
   }
 
   return <div className="auth-card">
-    <div className="auth-tabs">
+    <div className="auth-tabs" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
       <button type="button" className={mode === "login" ? "active" : ""} onClick={() => changeMode("login")}>로그인</button>
       <button type="button" className={mode === "signup" ? "active" : ""} onClick={() => changeMode("signup")}>회원가입</button>
       <button type="button" className={mode === "reset" ? "active" : ""} onClick={() => changeMode("reset")}>비밀번호 초기화</button>
