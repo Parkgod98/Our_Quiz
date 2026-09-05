@@ -50,8 +50,9 @@ if (pr) {
 
   try {
     const baseSha = pr.base.sha;
-    execSync(`git fetch --no-tags origin ${baseSha}`, { stdio: "ignore" });
-    const messages = execSync(`git log --format=%s ${baseSha}..HEAD`, { encoding: "utf8" })
+    const headSha = pr.head.sha;
+    execSync(`git fetch --no-tags origin ${baseSha} ${headSha}`, { stdio: "ignore" });
+    const messages = execSync(`git log --format=%s ${baseSha}..${headSha}`, { encoding: "utf8" })
       .split("\n")
       .map((message) => message.trim())
       .filter(Boolean);
