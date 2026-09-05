@@ -76,7 +76,24 @@ export function GroupDetailTabs({ overview, initialTab = "learning" }: { overvie
     </div>
 
     <nav className="tab-nav" aria-label="스터디 메뉴">
-      {tabs.map(([key, label]) => <button type="button" className={activeTab === key ? "active" : ""} onClick={() => changeTab(key)} key={key}>{label}</button>)}
+      {tabs.map(([key, label]) => {
+        const active = activeTab === key;
+        return <button
+          type="button"
+          className="text-button"
+          aria-current={active ? "page" : undefined}
+          onClick={() => changeTab(key)}
+          key={key}
+          style={{
+            padding: "10px 14px",
+            color: active ? "var(--text)" : "var(--muted)",
+            fontSize: 14,
+            fontWeight: 750,
+            borderRadius: 0,
+            borderBottom: `2px solid ${active ? "var(--accent)" : "transparent"}`,
+          }}
+        >{label}</button>;
+      })}
     </nav>
 
     {activeTab === "learning" && <div className="stack">
