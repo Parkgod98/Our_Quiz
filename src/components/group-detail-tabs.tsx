@@ -8,6 +8,7 @@ import { GroupAssignmentForm } from "@/components/group-assignment-form";
 type TabKey = "learning" | "members" | "history" | "settings";
 
 type GroupOverview = {
+  currentUserId: string;
   group: {
     id: string;
     name: string;
@@ -35,6 +36,8 @@ type GroupOverview = {
     id: string;
     userId: string;
     score: number | null;
+    correctCount: number;
+    wrongCount: number | null;
     total: number;
     submittedAt: string | null;
     title: string;
@@ -119,13 +122,27 @@ export function GroupDetailTabs({ overview, initialTab = "learning" }: { overvie
     </div>}
 
     {activeTab === "history" && <div className="panel stack">
-      <h2>학습 기록</h2>
-      {overview.attempts.length === 0 ? <p className="muted">아직 이 스터디에서 완료한 풀이가 없어요.</p> : overview.attempts.map((attempt) => {
+      <div className="section-heading"><div><h2>학습 기록</h2><p>스터디 멤버는 서로의 점수와 오답 개수를 함께 볼 수 있어요.</p></div></div>
+      {overview.attempts.length === 0 ? <p className="muted">아직 이 스터디에서 진행한 풀이가 없어요.</p> : overview.attempts.map((attempt) => {
         const member = overview.members.find((item) => item.userId === attempt.userId);
-        return <div className="list-row" key={attempt.id}>
-          <span><strong>{member?.displayName ?? "멤버"}</strong><small>{attempt.title} · {attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleDateString("ko-KR") : "진행 중"}</small></span>
-          <strong>{attempt.submittedAt ? `${attempt.score ?? 0} / ${attempt.total}` : "진행 중"}</strong>
-        </div>;
+        const ownAttempt = attempt.userId === overview.currentUserId;
+        const content = <>
+          <span>
+            <strong>{member?.displayName ?? "멤버"}</strong>
+            <small>{attempt.title} · {attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleDateString("ko-KR") : "진행 중"}</small>
+          </span>
+          <span className="row">
+            {attempt.submittedAt ? <>
+              <strong>{attempt.score ?? 0} / {attempt.total}</strong>
+              <small>정답 {attempt.correctCount} · 오답 {attempt.wrongCount ?? 0}</small>
+            </> : <strong>진행 중</strong>}
+            {ownAttempt && attempt.submittedAt && <span className="text-link">결과 보기 →</span>}
+          </span>
+        </>;
+
+        return ownAttempt && attempt.submittedAt
+          ? <Link className="list-row history-link" href={`/attempts/${attempt.id}`} key={attempt.id}>{content}</Link>
+          : <div className="list-row" key={attempt.id}>{content}</div>;
       })}
     </div>}
 
