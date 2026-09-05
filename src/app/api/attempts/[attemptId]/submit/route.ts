@@ -7,10 +7,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ att
   const { attemptId } = await params;
   const body = (await request.json()) as SubmitBody;
   if (!body.responses || typeof body.responses !== "object") return NextResponse.json({ error: "답안 정보가 필요합니다." }, { status: 400 });
+
   const supabase = await createSupabaseServerClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
-  const { data, error } = await supabase.rpc("submit_existing_attempt", { p_attempt_id: attemptId, p_responses: body.responses });
+  const { data, error } = await supabase.rpc("submit_existing_attempt", {
+    p_attempt_id: attemptId,
+    p_responses: body.responses,
+  });
+
   if (error) return NextResponse.json({ error: "제출하지 못했어요. 잠시 후 다시 시도해 주세요." }, { status: 400 });
   return NextResponse.json(data);
 }
