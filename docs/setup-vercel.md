@@ -2,30 +2,27 @@
 
 ## 환경 변수
 
-Our Quiz에서 필요한 공개 환경 변수는 두 개입니다.
+공개 환경 변수:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=<Project URL>
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<Publishable Key>
 ```
 
-둘 다 Supabase 브라우저 클라이언트에서 사용하는 공개 설정값입니다. Vercel이 `NEXT_PUBLIC_` prefix를 보고 "브라우저에 노출된다"고 경고하는 것은 정상입니다.
+둘 다 Supabase 브라우저 클라이언트에서 사용하는 공개 설정값입니다. Vercel이 `NEXT_PUBLIC_` prefix를 보고 브라우저에 노출된다고 경고하는 것은 정상입니다.
 
-Vercel에서 해당 값을 추가할 때 공개 노출이 의도된 값이므로 **Config**로 저장해도 됩니다.
-
-반대로 아래 값은 절대로 `NEXT_PUBLIC_`으로 만들면 안 됩니다.
+비밀번호 초기화 기능을 사용할 때만 아래 서버 전용 비밀값을 추가합니다.
 
 ```text
-SUPABASE_SECRET_KEY
-SUPABASE_SERVICE_ROLE_KEY
-service_role key
+SUPABASE_SECRET_KEY=<Supabase Secret Key>
+PASSWORD_RESET_CODE=<스터디 구성원끼리 공유할 초기화 코드>
 ```
 
-이런 서버 전용 비밀값은 현재 MVP에서 사용하지 않습니다.
+`SUPABASE_SECRET_KEY`와 `PASSWORD_RESET_CODE`는 절대로 `NEXT_PUBLIC_` prefix를 붙이지 않고 Vercel Secret으로 저장합니다. `SUPABASE_SECRET_KEY` 대신 기존 프로젝트의 `SUPABASE_SERVICE_ROLE_KEY`를 사용할 수도 있지만 신규 Secret Key 사용을 우선합니다.
 
 ## 등록 위치
 
-Vercel Project → Settings → Environment Variables에서 두 값을 등록합니다.
+Vercel Project → Settings → Environment Variables에서 등록합니다.
 
 권장 Target:
 
@@ -33,7 +30,7 @@ Vercel Project → Settings → Environment Variables에서 두 값을 등록합
 - Preview
 - Development
 
-필요한 환경에 모두 같은 Supabase 프로젝트를 연결할 수 있지만, 나중에 운영/개발 DB를 분리한다면 환경별 값을 나눕니다.
+비밀번호 초기화 비밀값은 실제 초기화 기능이 필요한 환경에만 등록합니다.
 
 ## Supabase Project URL 찾기
 
@@ -45,10 +42,13 @@ Project URL 형식:
 https://<project-ref>.supabase.co
 ```
 
+Secret Key는 Supabase Dashboard의 API Keys 화면에서 서버 전용 키를 생성/확인합니다.
+
 ## 배포 후 확인
 
 1. Vercel 배포 성공
 2. `/auth` 접속
-3. 회원가입/로그인
-4. `/groups`, `/import`, `/dashboard` 접근
-5. Supabase Auth와 DB 기록 확인
+3. 회원가입/로그인 확인
+4. `비밀번호 초기화`에서 가입 이메일 + 초기화 코드 + 새 비밀번호 입력
+5. 새 비밀번호로 로그인 확인
+6. `/groups`, `/import`, `/dashboard` 접근
