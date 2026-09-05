@@ -7,10 +7,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ atte
   const { attemptId } = await params;
   const body = (await request.json()) as ResponseBody;
   if (!body.questionId || body.response === undefined) return NextResponse.json({ error: "답안을 저장할 수 없어요." }, { status: 400 });
+
   const supabase = await createSupabaseServerClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
-  const { error } = await supabase.rpc("save_attempt_response", { p_attempt_id: attemptId, p_question_key: body.questionId, p_response: body.response });
+  const { error } = await supabase.rpc("save_attempt_response", {
+    p_attempt_id: attemptId,
+    p_question_key: body.questionId,
+    p_response: body.response,
+  });
+
   if (error) return NextResponse.json({ error: "답안을 저장하지 못했어요." }, { status: 400 });
   return NextResponse.json({ saved: true });
 }

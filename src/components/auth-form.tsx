@@ -66,18 +66,18 @@ export function AuthForm({ configured, initialMode = "login" }: { configured: bo
   }
 
   return <div className="auth-card">
-    <div className="auth-tabs">
-      <button className={mode === "login" ? "active" : ""} onClick={() => changeMode("login")}>로그인</button>
-      <button className={mode === "signup" ? "active" : ""} onClick={() => changeMode("signup")}>회원가입</button>
-      <button className={mode === "reset" ? "active" : ""} onClick={() => changeMode("reset")}>비밀번호 초기화</button>
+    <div className="auth-tabs" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+      <button type="button" className={mode === "login" ? "active" : ""} onClick={() => changeMode("login")}>로그인</button>
+      <button type="button" className={mode === "signup" ? "active" : ""} onClick={() => changeMode("signup")}>회원가입</button>
+      <button type="button" className={mode === "reset" ? "active" : ""} onClick={() => changeMode("reset")}>비밀번호 초기화</button>
     </div>
-    <div className="stack auth-fields">
+    <form className="stack auth-fields" onSubmit={(event) => { event.preventDefault(); if (!pending) void run(); }}>
       <label>이메일<input type="email" autoComplete="email" placeholder="name@example.com" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
       <label>{mode === "reset" ? "새 비밀번호" : "비밀번호"}<input type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} placeholder="8자 이상" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
       {(mode === "signup" || mode === "reset") && <label>비밀번호 확인<input type="password" autoComplete="new-password" minLength={8} placeholder="한 번 더 입력해 주세요" value={passwordConfirm} onChange={(event) => setPasswordConfirm(event.target.value)} /></label>}
-      <button className="auth-submit" disabled={pending} onClick={() => void run()}>{pending ? "처리 중..." : mode === "login" ? "로그인" : mode === "signup" ? "계정 만들기" : "비밀번호 바꾸기"}</button>
+      <button type="submit" className="auth-submit" disabled={pending}>{pending ? "처리 중..." : mode === "login" ? "로그인" : mode === "signup" ? "계정 만들기" : "비밀번호 바꾸기"}</button>
       {message && <p className="form-message">{message}</p>}
-    </div>
-    {mode !== "reset" && <p className="auth-switch">{mode === "login" ? "계정이 없으신가요?" : "이미 계정이 있으신가요?"} <button className="text-button" onClick={() => changeMode(mode === "login" ? "signup" : "login")}>{mode === "login" ? "회원가입" : "로그인"}</button></p>}
+    </form>
+    {mode !== "reset" && <p className="auth-switch">{mode === "login" ? "계정이 없으신가요?" : "이미 계정이 있으신가요?"} <button type="button" className="text-button" onClick={() => changeMode(mode === "login" ? "signup" : "login")}>{mode === "login" ? "회원가입" : "로그인"}</button></p>}
   </div>;
 }

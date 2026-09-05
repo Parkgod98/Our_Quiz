@@ -24,27 +24,42 @@ export default async function GroupDetailPage({ params, searchParams }: { params
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) notFound();
 
-  const { data: group } = await supabase.from("study_groups").select("id,name,invite_code,created_by,created_at").eq("id", groupId).single();
-  if (!group) notFound();
-
-  const [membersResult, assignmentsResult, attemptsResult, setsResult] = await Promise.all([
+  const [groupResult, membersResult, assignmentsResult] = await Promise.all([
+    supabase.from("study_groups").select("id,name,invite_code,created_by,created_at").eq("id", groupId).single(),
     supabase.from("group_members").select("user_id,role,joined_at").eq("group_id", groupId).order("joined_at"),
     supabase.rpc("get_group_assignments", { p_group_id: groupId }),
-    supabase.from("attempts").select("id,user_id,score,total,submitted_at,question_set_versions!inner(version_number,question_sets!inner(title))").eq("group_id", groupId).order("submitted_at", { ascending: false }).limit(50),
-    supabase.from("question_sets").select("title,question_set_versions(id,version_number,question_count)").eq("owner_id", userData.user.id),
   ]);
 
+  const group = groupResult.data;
+  if (!group) notFound();
+
   const members = (membersResult.data ?? []) as MembershipRow[];
-  const memberIds = members.map((member) => member.user_id);
-  const profilesResult = memberIds.length > 0 ? await supabase.from("profiles").select("id,display_name").in("id", memberIds) : { data: [] as ProfileRow[] };
-  const profiles = (profilesResult.data ?? []) as ProfileRow[];
-  const profileMap = new Map(profiles.map((profile) => [profile.id, profile.display_name || "이름 없음"]));
-  const assignments = (assignmentsResult.data ?? []) as AssignmentRow[];
-  const attempts = (attemptsResult.data ?? []) as unknown as AttemptRow[];
-  const sets = (setsResult.data ?? []) as unknown as SetRow[];
   const currentMembership = members.find((member) => member.user_id === userData.user.id);
   if (!currentMembership) notFound();
   const isOwner = currentMembership.role === "owner";
+  const assignments = (assignmentsResult.data ?? []) as AssignmentRow[];
+
+  let attempts: AttemptRow[] = [];
+  let sets: SetRow[] = [];
+  let profileMap = new Map<string, string>();
+
+  if (activeTab === "learning" && isOwner) {
+    const setsResult = await supabase.from("question_sets").select("title,question_set_versions(id,version_number,question_count)").eq("owner_id", userData.user.id);
+    sets = (setsResult.data ?? []) as unknown as SetRow[];
+  }
+
+  if (activeTab === "history") {
+    const attemptsResult = await supabase.from("attempts").select("id,user_id,score,total,submitted_at,question_set_versions!inner(version_number,question_sets!inner(title))").eq("group_id", groupId).order("submitted_at", { ascending: false }).limit(50);
+    attempts = (attemptsResult.data ?? []) as unknown as AttemptRow[];
+  }
+
+  if (activeTab === "members" || activeTab === "history") {
+    const memberIds = members.map((member) => member.user_id);
+    const profilesResult = memberIds.length > 0 ? await supabase.from("profiles").select("id,display_name").in("id", memberIds) : { data: [] as ProfileRow[] };
+    const profiles = (profilesResult.data ?? []) as ProfileRow[];
+    profileMap = new Map(profiles.map((profile) => [profile.id, profile.display_name || "이름 없음"]));
+  }
+
   const versions = sets.flatMap((set) => set.question_set_versions.map((version) => ({ id: version.id, label: `${set.title} · v${version.version_number} · ${version.question_count}문제` })));
 
   return <section className="stack page-section">
