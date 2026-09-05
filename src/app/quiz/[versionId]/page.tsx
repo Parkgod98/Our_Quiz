@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { QuizPlayer } from "@/components/quiz-player";
 import type { Choice, PlayableQuestionSet, QuestionType } from "@/lib/questions/types";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -34,7 +35,15 @@ export default async function QuizVersionPage({ params, searchParams }: { params
     p_group_id: groupId ?? null,
   });
 
-  if (error || !data) notFound();
+  if (error) {
+    logServerError("quiz.playable.load", error, { versionId, groupId: groupId ?? null });
+    if (error.message.includes("version not found") || error.message.includes("version access denied") || error.message.includes("group version access denied") || error.message.includes("authentication required")) notFound();
+    return <section className="narrow panel"><h1>문제를 불러오지 못했어요.</h1><p>오류가 기록됐어요. 잠시 후 다시 시도해 주세요.</p></section>;
+  }
+  if (!data) {
+    logServerError("quiz.playable.empty", new Error("playable question RPC returned empty data"), { versionId, groupId: groupId ?? null });
+    return <section className="narrow panel"><h1>문제를 불러오지 못했어요.</h1><p>오류가 기록됐어요. 잠시 후 다시 시도해 주세요.</p></section>;
+  }
 
   const row = data as unknown as PlayableRow;
   const questionSet: PlayableQuestionSet = {
