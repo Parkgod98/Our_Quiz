@@ -8,7 +8,7 @@ type QuestionRow = { question_key: string; type: QuestionType; topic: string; di
 type VersionRow = { id: string; version_number: number; question_count: number; question_sets: { portable_set_id: string; title: string; subject: string; week_number: number; description: string | null }; questions: QuestionRow[] };
 
 export default async function QuizVersionPage({ params, searchParams }: { params: Promise<{ versionId: string }>; searchParams: Promise<{ groupId?: string }> }) {
-  if (!isSupabaseConfigured()) return <section className="narrow panel"><h1>Supabase 연결 필요</h1><p>실제 Version 풀이는 Supabase 프로젝트 연결 후 활성화됩니다.</p></section>;
+  if (!isSupabaseConfigured()) return <section className="narrow panel"><h1>문제를 불러올 수 없어요.</h1><p>서비스 연결 상태를 확인한 뒤 다시 시도해 주세요.</p></section>;
   const [{ versionId }, { groupId }] = await Promise.all([params, searchParams]);
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("question_set_versions").select("id,version_number,question_count,question_sets!inner(portable_set_id,title,subject,week_number,description),questions(question_key,type,topic,difficulty,prompt,choices,items,order_index)").eq("id", versionId).single();
@@ -37,5 +37,5 @@ export default async function QuizVersionPage({ params, searchParams }: { params
       return { ...base, type: question.type };
     }),
   };
-  return <section className="narrow"><QuizPlayer questionSet={questionSet} versionId={versionId} groupId={verifiedGroupId} /></section>;
+  return <section><QuizPlayer questionSet={questionSet} versionId={versionId} groupId={verifiedGroupId} /></section>;
 }
