@@ -8,7 +8,7 @@ export async function SiteHeader() {
   let signedIn = false;
   if (isSupabaseConfigured()) {
     const cookieStore = await cookies();
-    signedIn = cookieStore.getAll().some(({ name, value }) => name.startsWith("sb-") && name.includes("auth-token") && Boolean(value));
+    signedIn = cookieStore.getAll().some(({ name, value }) => /^sb-.*-auth-token(?:\.\d+)?$/.test(name) && Boolean(value));
   }
 
   return <header className="site-header">
