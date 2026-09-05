@@ -10,7 +10,8 @@
     "validate:questions": "node scripts/validate-question-sets.mjs",
     "validate:repo": "node scripts/validate-repository.mjs",
     "validate:git": "node scripts/validate-git-conventions.mjs",
-    "validate": "npm run validate:repo && npm run validate:questions"
+    "validate": "npm run validate:repo && npm run validate:questions",
+    "test:e2e": "node scripts/e2e-core-flow.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",
