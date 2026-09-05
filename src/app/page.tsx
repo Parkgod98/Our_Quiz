@@ -1,31 +1,31 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const features = [
-  ["Portable Question Set", "ChatGPT나 Claude에서 만든 문제를 같은 JSON Schema로 Import/Export합니다."],
-  ["Immutable Version", "문제를 보강해도 이전 Attempt의 기준은 바뀌지 않습니다."],
-  ["Attempt History", "Start할 때마다 독립된 풀이 기록을 만들고 점수 변화를 누적합니다."],
-  ["Topic Analytics", "DRAM.Timing처럼 세부 Topic까지 오답 패턴을 모을 수 있게 설계했습니다."],
+  ["같은 문제로 함께 공부", "스터디에 문제집을 추가하면 모든 멤버가 같은 문제로 학습할 수 있어요."],
+  ["풀던 곳에서 그대로", "답안이 자동으로 저장돼 긴 문제집도 부담 없이 나눠서 풀 수 있어요."],
+  ["틀린 문제는 자동으로 정리", "오답과 반복해서 틀린 주제를 모아 필요한 부분만 다시 복습할 수 있어요."],
 ];
 
-export default function Home() {
-  return (
-    <>
-      <section className="hero">
-        <span className="eyebrow">STUDY QUESTION PLATFORM</span>
-        <h1>같은 문제를 풀고,<br />틀린 이유까지 함께 쌓는다.</h1>
-        <p>문제 생성은 AI에게 맡기되 문제 포맷, Version, 풀이 이력과 권한은 시스템이 보장하는 스터디용 문제은행입니다.</p>
-        <div className="row"><Link className="button-link" href="/quiz/demo">Demo 풀어보기</Link><Link className="button-link secondary" href="/import">문제 Import</Link></div>
-      </section>
+export default async function Home() {
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+    const { data } = await supabase.auth.getUser();
+    if (data.user) redirect("/dashboard");
+  }
 
-      <section className="feature-grid">
-        {features.map(([title, text]) => <article className="panel" key={title}><h2>{title}</h2><p>{text}</p></article>)}
-      </section>
+  return <div className="landing-page">
+    <section className="hero service-hero">
+      <span className="eyebrow">함께 만드는 공부 습관</span>
+      <h1>같이 풀고,<br />틀린 문제는 다시.</h1>
+      <p>스터디원과 같은 문제집을 풀고, 내 학습 기록과 오답을 한곳에서 관리하세요.</p>
+      <div className="row"><Link className="button-link large" href="/auth?mode=signup">무료로 시작하기</Link><Link className="text-link hero-login" href="/auth">이미 계정이 있어요</Link></div>
+    </section>
 
-      <section className="panel flow-panel">
-        <span className="eyebrow">CORE LOOP</span>
-        <h2>AI → JSON → Validate → Study → Review → Export</h2>
-        <pre>{`ChatGPT / Claude\n      ↓\nquestion-set.json\n      ↓\nImport & Validate\n      ↓\nQuestion Set Version\n      ↓\n각자의 Attempt\n      ↓\n오답 / Topic 통계\n      ↓\nExport 후 AI로 보강`}</pre>
-      </section>
-    </>
-  );
+    <section className="landing-features">{features.map(([title, description], index) => <article className="landing-feature" key={title}><span>0{index + 1}</span><h2>{title}</h2><p>{description}</p></article>)}</section>
+
+    <section className="landing-cta"><div><span className="eyebrow">OUR QUIZ</span><h2>이번 주 공부, 문제만 준비되면 바로 시작할 수 있어요.</h2></div><Link className="button-link" href="/auth?mode=signup">스터디 시작하기</Link></section>
+  </div>;
 }
