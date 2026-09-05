@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type MembershipRow = { user_id: string; role: "owner" | "member"; joined_at: string };
 type ProfileRow = { id: string; display_name: string | null };
-type AssignmentRow = { version_id: string; assigned_at: string; question_set_versions: { version_number: number; question_count: number; question_sets: { title: string; subject: string; week_number: number } } };
+type AssignmentRow = { group_id: string; version_id: string; assigned_at: string; version_number: number; question_count: number; title: string; subject: string; week_number: number };
 type AttemptRow = { id: string; user_id: string; score: number | null; total: number; submitted_at: string | null; question_set_versions: { version_number: number; question_sets: { title: string } } };
 type SetRow = { title: string; question_set_versions: Array<{ id: string; version_number: number; question_count: number }> };
 
@@ -29,7 +29,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
 
   const [membersResult, assignmentsResult, attemptsResult, setsResult] = await Promise.all([
     supabase.from("group_members").select("user_id,role,joined_at").eq("group_id", groupId).order("joined_at"),
-    supabase.from("group_question_sets").select("version_id,assigned_at,question_set_versions!inner(version_number,question_count,question_sets!inner(title,subject,week_number))").eq("group_id", groupId).order("assigned_at", { ascending: false }),
+    supabase.rpc("get_group_assignments", { p_group_id: groupId }),
     supabase.from("attempts").select("id,user_id,score,total,submitted_at,question_set_versions!inner(version_number,question_sets!inner(title))").eq("group_id", groupId).order("submitted_at", { ascending: false }).limit(50),
     supabase.from("question_sets").select("title,question_set_versions(id,version_number,question_count)").eq("owner_id", userData.user.id),
   ]);
@@ -39,7 +39,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
   const profilesResult = memberIds.length > 0 ? await supabase.from("profiles").select("id,display_name").in("id", memberIds) : { data: [] as ProfileRow[] };
   const profiles = (profilesResult.data ?? []) as ProfileRow[];
   const profileMap = new Map(profiles.map((profile) => [profile.id, profile.display_name || "이름 없음"]));
-  const assignments = (assignmentsResult.data ?? []) as unknown as AssignmentRow[];
+  const assignments = (assignmentsResult.data ?? []) as AssignmentRow[];
   const attempts = (attemptsResult.data ?? []) as unknown as AttemptRow[];
   const sets = (setsResult.data ?? []) as unknown as SetRow[];
   const currentMembership = members.find((member) => member.user_id === userData.user.id);
@@ -57,7 +57,7 @@ export default async function GroupDetailPage({ params, searchParams }: { params
 
     {activeTab === "learning" && <div className="stack">
       {isOwner && <div className="panel stack"><div><h2>문제집 추가</h2><p className="muted">내 문제집에서 이 스터디가 함께 풀 문제를 선택하세요.</p></div><GroupAssignmentForm groupId={groupId} versions={versions} /></div>}
-      <div className="stack"><div className="section-heading"><h2>함께 풀 문제</h2></div>{assignments.length === 0 ? <div className="empty-state"><h3>아직 추가된 문제집이 없어요.</h3><p>{isOwner ? "위에서 첫 문제집을 추가해 보세요." : "운영자가 문제집을 추가하면 여기에서 바로 풀 수 있어요."}</p></div> : assignments.map((assignment) => <article className="study-assignment-card" key={assignment.version_id}><div><span className="eyebrow">WEEK {assignment.question_set_versions.question_sets.week_number}</span><h3>{assignment.question_set_versions.question_sets.title}</h3><p>{assignment.question_set_versions.question_sets.subject} · {assignment.question_set_versions.question_count}문제</p></div><Link className="button-link" href={`/quiz/${assignment.version_id}?groupId=${groupId}`}>풀기</Link></article>)}</div>
+      <div className="stack"><div className="section-heading"><h2>함께 풀 문제</h2></div>{assignmentsResult.error ? <div className="empty-state"><h3>문제집을 불러오지 못했어요.</h3><p>잠시 후 새로고침해 주세요.</p></div> : assignments.length === 0 ? <div className="empty-state"><h3>아직 추가된 문제집이 없어요.</h3><p>{isOwner ? "위에서 첫 문제집을 추가해 보세요." : "운영자가 문제집을 추가하면 여기에서 바로 풀 수 있어요."}</p></div> : assignments.map((assignment) => <article className="study-assignment-card" key={assignment.version_id}><div><span className="eyebrow">WEEK {assignment.week_number}</span><h3>{assignment.title}</h3><p>{assignment.subject} · {assignment.question_count}문제</p></div><Link className="button-link" href={`/quiz/${assignment.version_id}?groupId=${groupId}`}>풀기</Link></article>)}</div>
     </div>}
 
     {activeTab === "members" && <div className="panel stack"><h2>멤버</h2>{members.map((member) => <div className="member-row" key={member.user_id}><div><strong>{profileMap.get(member.user_id) ?? "멤버"}</strong><small>{member.role === "owner" ? "운영자" : "멤버"}</small></div>{isOwner && member.role !== "owner" && <RemoveMemberButton groupId={groupId} userId={member.user_id} />}</div>)}</div>}
