@@ -1,31 +1,44 @@
-import { GroupManager, type Assignment, type GroupOption, type VersionOption } from "@/components/group-manager";
+import Link from "next/link";
+import { GroupDirectory, type GroupSummary } from "@/components/group-directory";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
-type MembershipRow = { group_id: string; role: string; study_groups: { id: string; name: string; invite_code: string } };
-type SetRow = { title: string; question_set_versions: Array<{ id: string; version_number: number; question_count: number }> };
-type AssignmentRow = { group_id: string; version_id: string; question_set_versions: { version_number: number; question_sets: { title: string } } };
+type MembershipRow = { group_id: string; role: "owner" | "member"; study_groups: { id: string; name: string } };
+type GroupMemberRow = { group_id: string };
+type AssignmentRow = { group_id: string };
 
 export default async function GroupsPage() {
-  if (!isSupabaseConfigured()) return <section className="stack"><div><span className="eyebrow">STUDY GROUP</span><h1>같은 Version을 함께 풀기</h1><p>Supabase 연결 후 그룹 생성, 초대 코드 참여, Version 배정이 활성화됩니다.</p></div><GroupManager groups={[]} versions={[]} assignments={[]} /></section>;
+  if (!isSupabaseConfigured()) return <section className="stack"><div><span className="eyebrow">스터디</span><h1>함께 공부할 공간</h1><p>서비스 연결이 완료되면 스터디를 만들고 멤버를 초대할 수 있어요.</p></div></section>;
 
   const supabase = await createSupabaseServerClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return <section className="narrow panel"><h1>로그인이 필요합니다.</h1><p>그룹 기능은 로그인 후 사용할 수 있습니다.</p></section>;
+  if (!userData.user) return <section className="narrow panel"><h1>로그인이 필요해요.</h1><p>스터디는 로그인 후 이용할 수 있어요.</p><Link className="button-link" href="/auth">로그인하기</Link></section>;
 
-  const [membershipResult, setResult, assignmentResult] = await Promise.all([
-    supabase.from("group_members").select("group_id,role,study_groups!inner(id,name,invite_code)").eq("user_id", userData.user.id),
-    supabase.from("question_sets").select("title,question_set_versions(id,version_number,question_count)").eq("owner_id", userData.user.id),
-    supabase.from("group_question_sets").select("group_id,version_id,question_set_versions!inner(version_number,question_sets!inner(title))"),
-  ]);
-
+  const membershipResult = await supabase.from("group_members").select("group_id,role,study_groups!inner(id,name)").eq("user_id", userData.user.id).order("joined_at");
   const memberships = (membershipResult.data ?? []) as unknown as MembershipRow[];
-  const sets = (setResult.data ?? []) as unknown as SetRow[];
-  const assignmentRows = (assignmentResult.data ?? []) as unknown as AssignmentRow[];
-  const groups: GroupOption[] = memberships.map((item) => ({ id: item.group_id, name: item.study_groups.name, inviteCode: item.study_groups.invite_code, isOwner: item.role === "owner" }));
-  const groupIds = new Set(groups.map((group) => group.id));
-  const versions: VersionOption[] = sets.flatMap((set) => set.question_set_versions.map((version) => ({ id: version.id, label: `${set.title} · v${version.version_number} · ${version.question_count}문제` })));
-  const assignments: Assignment[] = assignmentRows.filter((item) => groupIds.has(item.group_id)).map((item) => ({ groupId: item.group_id, versionId: item.version_id, label: `${item.question_set_versions.question_sets.title} · v${item.question_set_versions.version_number}` }));
+  const groupIds = memberships.map((membership) => membership.group_id);
 
-  return <section className="stack"><div><span className="eyebrow">STUDY GROUP</span><h1>같은 Version을 함께 풀기</h1><p>Owner가 Version을 그룹에 배정하면 모든 멤버가 동일한 Snapshot을 Start합니다.</p></div><GroupManager groups={groups} versions={versions} assignments={assignments} /></section>;
+  let memberRows: GroupMemberRow[] = [];
+  let assignmentRows: AssignmentRow[] = [];
+  if (groupIds.length > 0) {
+    const [membersResult, assignmentsResult] = await Promise.all([
+      supabase.from("group_members").select("group_id").in("group_id", groupIds),
+      supabase.from("group_question_sets").select("group_id").in("group_id", groupIds),
+    ]);
+    memberRows = (membersResult.data ?? []) as GroupMemberRow[];
+    assignmentRows = (assignmentsResult.data ?? []) as AssignmentRow[];
+  }
+
+  const groups: GroupSummary[] = memberships.map((membership) => ({
+    id: membership.group_id,
+    name: membership.study_groups.name,
+    role: membership.role,
+    memberCount: memberRows.filter((row) => row.group_id === membership.group_id).length,
+    assignmentCount: assignmentRows.filter((row) => row.group_id === membership.group_id).length,
+  }));
+
+  return <section className="stack page-section">
+    <div className="page-heading"><span className="eyebrow">스터디</span><h1>내 스터디</h1><p>참여 중인 스터디를 확인하고 함께 풀 문제를 관리해 보세요.</p></div>
+    <GroupDirectory groups={groups} />
+  </section>;
 }
