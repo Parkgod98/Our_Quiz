@@ -31,16 +31,30 @@ Service Role Key는 이 MVP에서 필요하지 않습니다.
 
 ## 4. Auth 설정
 
-초기에는 Email/Password를 사용합니다. Email Confirmation을 켤 경우 Supabase의 Site URL / Redirect URL에 로컬과 Vercel 주소를 등록합니다.
+초기에는 Email/Password를 사용하지만 **이메일 확인 절차는 사용하지 않습니다.**
+
+Supabase Dashboard에서 Email Provider 설정의 **Confirm email** 옵션을 꺼주세요.
+
+목표 동작은 다음과 같습니다.
+
+```text
+이메일 + 비밀번호 입력
+→ 회원가입
+→ 즉시 세션 발급
+→ Dashboard 이동
+```
+
+별도의 인증 메일 발송/확인 링크 절차는 사용하지 않습니다.
 
 ## 5. 확인
 
 1. `/auth`에서 두 계정을 생성
-2. 한 계정으로 `/groups`에서 그룹 생성
-3. 다른 계정에서 초대 코드로 참여
-4. `/import`에서 `examples/week1-sample.json` 업로드
-5. DB의 `question_set_versions`와 `questions` 생성 확인
-6. 실제 Version ID로 `/quiz/<version-id>` 접근
+2. 회원가입 직후 이메일 확인 없이 Dashboard로 이동되는지 확인
+3. 한 계정으로 `/groups`에서 그룹 생성
+4. 다른 계정에서 초대 코드로 참여
+5. `/import`에서 `examples/week1-sample.json` 업로드
+6. DB의 `question_set_versions`와 `questions` 생성 확인
+7. 실제 Version ID로 `/quiz/<version-id>` 접근
 
 ## RLS 확인
 

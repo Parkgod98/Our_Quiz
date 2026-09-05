@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function AuthForm({ configured }: { configured: boolean }) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -27,7 +29,14 @@ export function AuthForm({ configured }: { configured: boolean }) {
       setMessage(result.error.message);
       return;
     }
-    setMessage(mode === "login" ? "로그인했습니다. Dashboard로 이동하세요." : "가입 요청이 완료되었습니다. 이메일 확인 설정에 따라 인증 메일을 확인하세요.");
+
+    if (!result.data.session) {
+      setMessage("회원가입은 되었지만 즉시 로그인되지 않았습니다. Supabase에서 Confirm email을 꺼주세요.");
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
