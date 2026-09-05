@@ -96,6 +96,24 @@ assert.equal(memberAssignments.length, 1, "member should see the problem set ass
 assert.equal(memberAssignments[0].version_id, imported.versionId);
 assert.equal(memberAssignments[0].title, "Shared Assignment Quiz");
 
+const playable = await api("/rest/v1/rpc/get_playable_question_set", {
+  method: "POST",
+  token: member.token,
+  body: { p_version_id: imported.versionId, p_group_id: group.id },
+});
+assert.equal(playable.id, imported.versionId, "member should load the assigned version for play");
+assert.equal(playable.title, "Shared Assignment Quiz");
+assert.equal(playable.questions.length, 1);
+assert.equal(playable.questions[0].id, "q-001");
+assert.equal("answer" in playable.questions[0], false, "play payload must not expose answers");
+
+const started = await api("/rest/v1/rpc/start_or_resume_attempt", {
+  method: "POST",
+  token: member.token,
+  body: { p_version_id: imported.versionId, p_group_id: group.id },
+});
+assert.ok(started.attemptId, "member should start the assigned quiz");
+
 const memberHomeAssignments = await api("/rest/v1/rpc/get_my_group_assignments", {
   method: "POST",
   token: member.token,
@@ -103,4 +121,19 @@ const memberHomeAssignments = await api("/rest/v1/rpc/get_my_group_assignments",
 });
 assert.ok(memberHomeAssignments.some((assignment) => assignment.version_id === imported.versionId), "member home should include the shared problem set");
 
-console.log("Shared assignment visibility E2E passed");
+const groupSummaries = await api("/rest/v1/rpc/get_my_group_summaries", {
+  method: "POST",
+  token: member.token,
+  body: {},
+});
+assert.ok(groupSummaries.some((summary) => summary.id === group.id && Number(summary.assignment_count) === 1));
+
+const dashboard = await api("/rest/v1/rpc/get_dashboard_overview", {
+  method: "POST",
+  token: member.token,
+  body: {},
+});
+assert.ok(dashboard.assignments.some((assignment) => assignment.versionId === imported.versionId));
+assert.ok(dashboard.attempts.some((attempt) => attempt.versionId === imported.versionId));
+
+console.log("Shared assignment visibility and playable access E2E passed");
