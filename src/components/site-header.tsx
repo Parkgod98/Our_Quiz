@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { LogoutButton } from "@/components/account-actions";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const navItems = [
   ["/dashboard", "홈"],
@@ -13,9 +13,8 @@ const navItems = [
 export async function SiteHeader() {
   let signedIn = false;
   if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
-    const { data } = await supabase.auth.getUser();
-    signedIn = Boolean(data.user);
+    const cookieStore = await cookies();
+    signedIn = cookieStore.getAll().some(({ name, value }) => name.startsWith("sb-") && name.includes("auth-token") && Boolean(value));
   }
 
   return <header className="site-header">
