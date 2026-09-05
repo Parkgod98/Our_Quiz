@@ -37,11 +37,13 @@
 
 ```bash
 npm run validate
+npm run validate:git
 npm run lint
 npm run build
 ```
 
 - `npm run validate`는 문제 JSON과 Repository 규칙을 검사합니다.
+- `npm run validate:git`은 브랜치/커밋/PR 규칙을 검사합니다. PR 메타데이터 검사는 GitHub Actions에서 완전하게 수행됩니다.
 - CI 실패를 무시하거나 검증 코드를 삭제해 통과시키지 않습니다.
 - 실패 원인을 해결하고 다시 검증합니다.
 
@@ -59,9 +61,13 @@ npm run build
 - `main` 직접 작업 금지(저장소 초기화 같은 명시적 예외만 허용)
 - 브랜치: `<type>/<english-kebab-case>`
 - 커밋: `<type>: <한글 작업 설명>`
-- PR 제목도 같은 형식
-- PR 본문은 `변경 내용 / 검증 / 참고` 구조 사용
+- PR 제목도 `<type>: <한글 설명>`이며 **브랜치 type과 PR title type이 같아야 함**
+- PR 본문은 `.github/PULL_REQUEST_TEMPLATE.md` 구조를 그대로 사용
+- 기본 Merge 방식은 Squash merge
+- GitHub Actions가 브랜치명, PR 제목/본문, 커밋 메시지 형식을 검사함
 - Push, PR 생성, Merge, 배포는 사용자의 명시적 요청이 있어야 수행
+
+세부 규칙은 `docs/git-conventions.md`가 Source of Truth입니다.
 
 ## Agent 간 규칙 공유
 

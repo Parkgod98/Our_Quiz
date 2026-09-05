@@ -5,6 +5,7 @@
 ## 검증
 
 - [ ] `npm run validate`
+- [ ] `npm run validate:git`
 - [ ] `npm run lint`
 - [ ] `npm run build`
 
@@ -13,6 +14,7 @@
 - [ ] 기존 Published Question Set Version을 직접 수정하지 않았다.
 - [ ] Secret, 실제 사용자 답안, 개인정보를 커밋하지 않았다.
 - [ ] DB 변경은 새 migration으로 추가했다.
+- [ ] `NEXT_PUBLIC_`에는 브라우저 공개가 안전한 값만 사용했다.
 
 ## 참고
 
