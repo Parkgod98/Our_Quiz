@@ -11,12 +11,15 @@ export function ImportPanel({ persistenceEnabled }: { persistenceEnabled: boolea
   const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   async function onFile(file: File | undefined) {
     setQuestionSet(null);
     setErrors([]);
     setMessage("");
+    setDragging(false);
     if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".json") && file.type !== "application/json") return setErrors(["JSON 파일만 추가할 수 있어요."]);
     if (file.size > 2_000_000) return setErrors(["파일 크기는 2MB 이하여야 해요."]);
     try {
       const parsed: unknown = JSON.parse(await file.text());
@@ -41,11 +44,17 @@ export function ImportPanel({ persistenceEnabled }: { persistenceEnabled: boolea
   }
 
   return <div className="stack">
-    <label className="upload-card">
+    <label
+      className={`upload-card${dragging ? " is-dragging" : ""}`}
+      onDragEnter={(event) => { event.preventDefault(); setDragging(true); }}
+      onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; setDragging(true); }}
+      onDragLeave={(event) => { event.preventDefault(); if (event.currentTarget === event.target) setDragging(false); }}
+      onDrop={(event) => { event.preventDefault(); setDragging(false); void onFile(event.dataTransfer.files?.[0]); }}
+    >
       <span className="upload-icon">↑</span>
-      <strong>JSON 파일 선택</strong>
-      <span>파일을 클릭해서 선택해 주세요. 최대 2MB</span>
-      <input type="file" accept="application/json,.json" onChange={(event) => onFile(event.target.files?.[0])} />
+      <strong>{dragging ? "여기에 놓아주세요" : "JSON 파일 선택 또는 드래그"}</strong>
+      <span>클릭해서 선택하거나 파일을 끌어다 놓으세요. 최대 2MB</span>
+      <input type="file" accept="application/json,.json" onChange={(event) => void onFile(event.target.files?.[0])} />
     </label>
 
     {errors.length > 0 && <div className="panel error-box"><strong>파일을 확인해 주세요.</strong><ul>{errors.slice(0, 8).map((error) => <li key={error}>{error}</li>)}</ul>{errors.length > 8 && <p>외 {errors.length - 8}개의 항목이 더 있어요.</p>}</div>}
