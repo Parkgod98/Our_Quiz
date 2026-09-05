@@ -136,4 +136,25 @@ const dashboard = await api("/rest/v1/rpc/get_dashboard_overview", {
 assert.ok(dashboard.assignments.some((assignment) => assignment.versionId === imported.versionId));
 assert.ok(dashboard.attempts.some((attempt) => attempt.versionId === imported.versionId));
 
-console.log("Shared assignment visibility and playable access E2E passed");
+const memberDetail = await api("/rest/v1/rpc/get_group_detail_overview", {
+  method: "POST",
+  token: member.token,
+  body: { p_group_id: group.id },
+});
+assert.equal(memberDetail.group.id, group.id);
+assert.equal(memberDetail.role, "member");
+assert.equal(memberDetail.members.length, 2);
+assert.ok(memberDetail.members.some((item) => item.userId === member.id));
+assert.ok(memberDetail.assignments.some((assignment) => assignment.versionId === imported.versionId));
+assert.ok(memberDetail.attempts.some((attempt) => attempt.id === started.attemptId));
+assert.deepEqual(memberDetail.versions, [], "regular members should not receive the owner's private library list");
+
+const ownerDetail = await api("/rest/v1/rpc/get_group_detail_overview", {
+  method: "POST",
+  token: owner.token,
+  body: { p_group_id: group.id },
+});
+assert.equal(ownerDetail.role, "owner");
+assert.ok(ownerDetail.versions.some((version) => version.id === imported.versionId));
+
+console.log("Shared assignment visibility, playable access and group overview E2E passed");
