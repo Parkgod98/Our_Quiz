@@ -19,6 +19,7 @@
 - Question ID, Topic, 정답, 해설은 Import 시 검증하고 잘못된 문제를 조용히 보정하지 않습니다.
 - 사용자별 답안과 통계는 서버에서 권한을 확인하고 RLS를 우회하지 않습니다.
 - AI가 생성한 문제는 곧바로 신뢰하지 않고 Schema Validation을 통과한 뒤 저장합니다.
+- 사용자 화면에는 내부 도메인/인프라 용어를 그대로 노출하지 않고 `docs/product-spec.md`의 사용자 언어 원칙을 따릅니다.
 
 ## 개발 규칙
 
@@ -26,6 +27,7 @@
 - 기본은 Server Component입니다. 브라우저 상호작용이 있을 때만 Client Component를 사용합니다.
 - 데이터 접근은 `src/lib/`에 모으고 UI에서 Supabase 쿼리를 난립시키지 않습니다.
 - DB 변경은 반드시 `supabase/migrations/`의 새 migration으로 추가합니다. 이미 적용된 migration을 수정하지 않습니다.
+- 운영 DB 변경을 SQL Editor 수동 실행 절차로 문서화하지 않습니다. `main`에 merge된 migration은 `.github/workflows/supabase-production.yml`을 통해 자동 적용하는 흐름을 유지합니다.
 - `question_set_versions`와 그 버전에 속한 문제는 Publish 후 불변으로 취급합니다. 수정이 필요하면 새 Version을 만듭니다.
 - 정답 판정은 Client가 아니라 Server가 최종 권한을 갖습니다.
 - `.env*`, 키, 토큰, 실제 사용자 답안 등 민감 정보는 커밋하지 않습니다.
@@ -42,8 +44,16 @@ npm run lint
 npm run build
 ```
 
+DB/RLS/Auth/핵심 학습 흐름을 건드리는 변경은 추가로 Core E2E를 통과해야 합니다.
+
+```bash
+npm run test:e2e
+```
+
 - `npm run validate`는 문제 JSON과 Repository 규칙을 검사합니다.
 - `npm run validate:git`은 브랜치/커밋/PR 규칙을 검사합니다. PR 메타데이터 검사는 GitHub Actions에서 완전하게 수행됩니다.
+- Core E2E는 GitHub Actions에서 로컬 Supabase를 빈 상태로 띄우고 모든 migration을 적용한 뒤 회원가입, 그룹, 문제 Import, 풀이 저장/제출, 오답 복습을 실제 Auth/REST/RPC 호출로 검증합니다.
+- E2E는 운영 Supabase 데이터나 실제 사용자 계정을 사용하지 않습니다.
 - CI 실패를 무시하거나 검증 코드를 삭제해 통과시키지 않습니다.
 - 실패 원인을 해결하고 다시 검증합니다.
 
