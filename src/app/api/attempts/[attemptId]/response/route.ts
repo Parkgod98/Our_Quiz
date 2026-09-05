@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ResponseBody = { questionId?: string; response?: unknown };
@@ -15,6 +16,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ atte
     p_response: body.response,
   });
 
-  if (error) return NextResponse.json({ error: "답안을 저장하지 못했어요." }, { status: 400 });
+  if (error) {
+    logServerError("api.attempts.response", error, { attemptId, questionId: body.questionId });
+    return NextResponse.json({ error: "답안을 저장하지 못했어요." }, { status: 400 });
+  }
   return NextResponse.json({ saved: true });
 }
