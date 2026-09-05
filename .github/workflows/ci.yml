@@ -10,11 +10,13 @@ permissions:
 
 jobs:
   validate:
-    name: Validate, lint and build
+    name: Validate repository, Git policy, lint and build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -26,6 +28,9 @@ jobs:
 
       - name: Validate repository harness and question sets
         run: npm run validate
+
+      - name: Validate Git conventions
+        run: npm run validate:git
 
       - name: Lint
         run: npm run lint

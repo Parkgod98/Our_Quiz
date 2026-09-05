@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "validate:questions": "node scripts/validate-question-sets.mjs",
     "validate:repo": "node scripts/validate-repository.mjs",
+    "validate:git": "node scripts/validate-git-conventions.mjs",
     "validate": "npm run validate:repo && npm run validate:questions"
   },
   "dependencies": {
