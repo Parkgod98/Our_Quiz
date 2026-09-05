@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0",
+  "setId": "week1-dram-sample",
+  "title": "Week 1 - DRAM Sample",
+  "subject": "Semiconductor",
+  "week": 1,
+  "version": 1,
+  "description": "Import/Export 확인용 샘플",
+  "questions": [
+    {
+      "id": "dram-refresh-001",
+      "type": "single_choice",
+      "topic": "DRAM.Refresh",
+      "difficulty": 2,
+      "prompt": "DRAM에 Refresh가 필요한 가장 직접적인 이유는?",
+      "choices": [
+        { "id": "a", "text": "Capacitor 전하가 누설되기 때문에" },
+        { "id": "b", "text": "NAND처럼 Erase가 필요하기 때문에" }
+      ],
+      "answer": "a",
+      "explanation": "DRAM은 Capacitor의 전하 상태로 데이터를 저장하며 전하는 시간이 지나며 누설된다."
+    }
+  ]
+}
