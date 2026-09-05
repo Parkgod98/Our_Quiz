@@ -1,0 +1,181 @@
+.reviewHeading {
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.reviewHeading h2 {
+  margin:0;
+  font-size:22px;
+  letter-spacing:-.025em;
+}
+
+.reviewHeading p {
+  margin:3px 0 0;
+  color:var(--muted);
+}
+
+.filters {
+  display:flex;
+  gap:6px;
+  padding:4px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface-soft);
+}
+
+.filterButton,
+.activeFilter {
+  min-height:38px;
+  padding:8px 13px;
+  border-radius:9px;
+  background:transparent;
+  color:var(--muted);
+  box-shadow:none;
+}
+
+.filterButton:hover:not(:disabled) {
+  background:#fff;
+  color:var(--text);
+}
+
+.activeFilter {
+  background:#fff;
+  color:var(--text);
+  box-shadow:0 1px 3px rgba(16,24,40,.1);
+}
+
+.activeFilter:hover:not(:disabled) {
+  background:#fff;
+  color:var(--text);
+}
+
+.choiceList {
+  display:grid;
+  gap:8px;
+  margin-top:16px;
+}
+
+.choiceRow {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  min-height:48px;
+  padding:11px 13px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#fff;
+}
+
+.choiceNeutral {
+  color:var(--muted);
+}
+
+.choiceCorrect {
+  border-color:#abefc6;
+  background:var(--success-bg);
+  color:#05603a;
+}
+
+.choiceWrong {
+  border-color:#fecdca;
+  background:var(--danger-bg);
+  color:var(--danger);
+}
+
+.choiceText {
+  min-width:0;
+  font-weight:650;
+}
+
+.correctBadge,
+.wrongBadge {
+  flex:0 0 auto;
+  border-radius:999px;
+  padding:4px 9px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.correctBadge {
+  background:#d1fadf;
+  color:#05603a;
+}
+
+.wrongBadge {
+  background:#fee4e2;
+  color:var(--danger);
+}
+
+.answerGrid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:16px;
+}
+
+.answerBox {
+  display:grid;
+  gap:3px;
+  min-height:76px;
+  padding:13px 14px;
+  border:1px solid var(--line);
+  border-radius:11px;
+}
+
+.answerBox span {
+  font-size:12px;
+  font-weight:800;
+}
+
+.answerBox strong {
+  word-break:break-word;
+}
+
+.answerOk,
+.answerCorrect {
+  border-color:#abefc6;
+  background:var(--success-bg);
+}
+
+.answerOk span,
+.answerCorrect span,
+.correctText {
+  color:var(--success);
+}
+
+.answerBad {
+  border-color:#fecdca;
+  background:var(--danger-bg);
+}
+
+.answerBad span,
+.wrongText {
+  color:var(--danger);
+}
+
+@media (max-width:720px) {
+  .reviewHeading {
+    align-items:stretch;
+    flex-direction:column;
+  }
+
+  .filters {
+    width:100%;
+  }
+
+  .filters button {
+    flex:1;
+  }
+
+  .answerGrid {
+    grid-template-columns:1fr;
+  }
+
+  .choiceRow {
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
