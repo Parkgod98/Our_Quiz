@@ -45,10 +45,15 @@ export function ImportPanel({ persistenceEnabled }: { persistenceEnabled: boolea
 
   return <div className="stack">
     <label
-      className={`upload-card${dragging ? " is-dragging" : ""}`}
+      className="upload-card"
+      style={dragging ? { borderColor: "var(--accent)", background: "var(--accent-soft)" } : undefined}
       onDragEnter={(event) => { event.preventDefault(); setDragging(true); }}
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; setDragging(true); }}
-      onDragLeave={(event) => { event.preventDefault(); if (event.currentTarget === event.target) setDragging(false); }}
+      onDragLeave={(event) => {
+        event.preventDefault();
+        const next = event.relatedTarget;
+        if (!(next instanceof Node) || !event.currentTarget.contains(next)) setDragging(false);
+      }}
       onDrop={(event) => { event.preventDefault(); setDragging(false); void onFile(event.dataTransfer.files?.[0]); }}
     >
       <span className="upload-icon">↑</span>
