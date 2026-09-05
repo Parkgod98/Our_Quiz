@@ -7,12 +7,20 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 type QuestionRow = { question_key: string; type: QuestionType; topic: string; difficulty: number; prompt: string; choices: Choice[] | null; items: Choice[] | null; order_index: number };
 type VersionRow = { id: string; version_number: number; question_count: number; question_sets: { portable_set_id: string; title: string; subject: string; week_number: number; description: string | null }; questions: QuestionRow[] };
 
-export default async function QuizVersionPage({ params }: { params: Promise<{ versionId: string }> }) {
+export default async function QuizVersionPage({ params, searchParams }: { params: Promise<{ versionId: string }>; searchParams: Promise<{ groupId?: string }> }) {
   if (!isSupabaseConfigured()) return <section className="narrow panel"><h1>Supabase 연결 필요</h1><p>실제 Version 풀이는 Supabase 프로젝트 연결 후 활성화됩니다.</p></section>;
-  const { versionId } = await params;
+  const [{ versionId }, { groupId }] = await Promise.all([params, searchParams]);
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("question_set_versions").select("id,version_number,question_count,question_sets!inner(portable_set_id,title,subject,week_number,description),questions(question_key,type,topic,difficulty,prompt,choices,items,order_index)").eq("id", versionId).single();
   if (error || !data) notFound();
+
+  let verifiedGroupId: string | undefined;
+  if (groupId) {
+    const { data: assignment } = await supabase.from("group_question_sets").select("group_id").eq("group_id", groupId).eq("version_id", versionId).maybeSingle();
+    if (!assignment) notFound();
+    verifiedGroupId = assignment.group_id;
+  }
+
   const row = data as unknown as VersionRow;
   const questionSet: PlayableQuestionSet = {
     schemaVersion: "1.0",
@@ -29,5 +37,5 @@ export default async function QuizVersionPage({ params }: { params: Promise<{ ve
       return { ...base, type: question.type };
     }),
   };
-  return <section className="narrow"><QuizPlayer questionSet={questionSet} versionId={versionId} /></section>;
+  return <section className="narrow"><QuizPlayer questionSet={questionSet} versionId={versionId} groupId={verifiedGroupId} /></section>;
 }

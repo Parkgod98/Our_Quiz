@@ -12,7 +12,7 @@ function ChoiceList({ question, value, onChange }: { question: Extract<PlayableQ
   return <div className="choices">{question.choices.map((choice) => <label className="choice" key={choice.id}><input type={question.type === "single_choice" ? "radio" : "checkbox"} name={question.id} checked={question.type === "single_choice" ? value === choice.id : selected.includes(choice.id)} onChange={() => question.type === "single_choice" ? onChange(choice.id) : onChange(selected.includes(choice.id) ? selected.filter((id) => id !== choice.id) : [...selected, choice.id])} /><span>{choice.text}</span></label>)}</div>;
 }
 
-export function QuizPlayer({ questionSet, versionId, demoAnswerSet }: { questionSet: PlayableQuestionSet; versionId?: string; demoAnswerSet?: PortableQuestionSet }) {
+export function QuizPlayer({ questionSet, versionId, groupId, demoAnswerSet }: { questionSet: PlayableQuestionSet; versionId?: string; groupId?: string; demoAnswerSet?: PortableQuestionSet }) {
   const [index, setIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [feedback, setFeedback] = useState<FeedbackMap | null>(null);
@@ -62,7 +62,7 @@ export function QuizPlayer({ questionSet, versionId, demoAnswerSet }: { question
     const apiResponse = await fetch("/api/attempts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ versionId, responses }),
+      body: JSON.stringify({ versionId, groupId, responses }),
     });
     const payload = (await apiResponse.json()) as { score?: number; results?: Array<{ questionId: string; correct: boolean; explanation: string }>; error?: string };
     if (apiResponse.ok && payload.results) {
