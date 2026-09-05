@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type FlagBody = { questionId?: string; flagged?: boolean };
@@ -15,6 +16,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ atte
     p_flagged: body.flagged,
   });
 
-  if (error) return NextResponse.json({ error: "문제 표시를 저장하지 못했어요." }, { status: 400 });
+  if (error) {
+    logServerError("api.attempts.flag", error, { attemptId, questionId: body.questionId, flagged: body.flagged });
+    return NextResponse.json({ error: "문제 표시를 저장하지 못했어요." }, { status: 400 });
+  }
   return NextResponse.json({ saved: true });
 }
