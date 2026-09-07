@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SubmitBody = { responses?: Record<string, unknown> };
@@ -14,6 +15,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ att
     p_responses: body.responses,
   });
 
-  if (error) return NextResponse.json({ error: "제출하지 못했어요. 잠시 후 다시 시도해 주세요." }, { status: 400 });
+  if (error) {
+    logServerError("api.attempts.submit", error, { attemptId });
+    return NextResponse.json({ error: "제출하지 못했어요. 잠시 후 다시 시도해 주세요." }, { status: 400 });
+  }
   return NextResponse.json(data);
 }

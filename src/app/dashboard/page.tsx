@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type AttemptRow = {
@@ -52,7 +53,14 @@ export default async function DashboardPage() {
   const { data, error } = await supabase.rpc("get_dashboard_overview");
 
   if (!data && !error) return <section className="narrow panel"><h1>로그인이 필요해요.</h1><Link className="button-link" href="/auth">로그인하기</Link></section>;
-  if (error || !data) return <section className="narrow panel"><h1>학습 기록을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section>;
+  if (error) {
+    logServerError("dashboard.load", error);
+    return <section className="narrow panel"><h1>학습 기록을 불러오지 못했어요.</h1><p>오류가 기록됐어요. 잠시 후 다시 시도해 주세요.</p></section>;
+  }
+  if (!data) {
+    logServerError("dashboard.empty", new Error("dashboard RPC returned empty data"));
+    return <section className="narrow panel"><h1>학습 기록을 불러오지 못했어요.</h1><p>오류가 기록됐어요. 잠시 후 다시 시도해 주세요.</p></section>;
+  }
 
   const overview = data as unknown as DashboardOverview;
   const attempts = overview.attempts ?? [];

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type StartBody = { versionId?: string; groupId?: string };
@@ -13,6 +14,9 @@ export async function POST(request: Request) {
     p_group_id: body.groupId ?? null,
   });
 
-  if (error) return NextResponse.json({ error: "풀이를 시작하지 못했어요." }, { status: 400 });
+  if (error) {
+    logServerError("api.attempts.start", error, { versionId: body.versionId, groupId: body.groupId ?? null });
+    return NextResponse.json({ error: "풀이를 시작하지 못했어요." }, { status: 400 });
+  }
   return NextResponse.json(data);
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { validateQuestionSet } from "@/lib/questions/validator";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -11,7 +12,8 @@ export async function POST(request: Request) {
   let input: unknown;
   try {
     input = JSON.parse(rawText);
-  } catch {
+  } catch (error) {
+    logServerError("api.question-sets.import.parse", error);
     return NextResponse.json({ error: "유효한 JSON이 아닙니다." }, { status: 400 });
   }
 
@@ -20,6 +22,9 @@ export async function POST(request: Request) {
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("import_question_set", { p_payload: validation.data });
-  if (error) return NextResponse.json({ error: "문제집을 추가하지 못했어요." }, { status: 400 });
+  if (error) {
+    logServerError("api.question-sets.import", error, { setId: validation.data.setId, version: validation.data.version });
+    return NextResponse.json({ error: "문제집을 추가하지 못했어요." }, { status: 400 });
+  }
   return NextResponse.json({ message: "문제 세트를 저장했습니다.", data });
 }

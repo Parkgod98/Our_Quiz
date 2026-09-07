@@ -107,12 +107,41 @@ assert.equal(playable.questions.length, 1);
 assert.equal(playable.questions[0].id, "q-001");
 assert.equal("answer" in playable.questions[0], false, "play payload must not expose answers");
 
-const started = await api("/rest/v1/rpc/start_or_resume_attempt", {
+const memberStarted = await api("/rest/v1/rpc/start_or_resume_attempt", {
   method: "POST",
   token: member.token,
   body: { p_version_id: imported.versionId, p_group_id: group.id },
 });
-assert.ok(started.attemptId, "member should start the assigned quiz");
+assert.ok(memberStarted.attemptId, "member should start the assigned quiz");
+
+const ownerStarted = await api("/rest/v1/rpc/start_or_resume_attempt", {
+  method: "POST",
+  token: owner.token,
+  body: { p_version_id: imported.versionId, p_group_id: group.id },
+});
+assert.ok(ownerStarted.attemptId, "owner should start the assigned quiz");
+
+const memberSubmitted = await api("/rest/v1/rpc/submit_existing_attempt", {
+  method: "POST",
+  token: member.token,
+  body: { p_attempt_id: memberStarted.attemptId, p_responses: { "q-001": false } },
+});
+assert.equal(memberSubmitted.score, 0);
+
+const ownerSubmitted = await api("/rest/v1/rpc/submit_existing_attempt", {
+  method: "POST",
+  token: owner.token,
+  body: { p_attempt_id: ownerStarted.attemptId, p_responses: { "q-001": true } },
+});
+assert.equal(ownerSubmitted.score, 1);
+
+const memberResult = await api("/rest/v1/rpc/get_attempt_result", {
+  method: "POST",
+  token: member.token,
+  body: { p_attempt_id: memberStarted.attemptId },
+});
+assert.equal(memberResult.questions[0].type, "true_false", "result payload should include question type for readable answer comparison");
+assert.equal(memberResult.questions[0].correct, false);
 
 const memberHomeAssignments = await api("/rest/v1/rpc/get_my_group_assignments", {
   method: "POST",
@@ -136,4 +165,28 @@ const dashboard = await api("/rest/v1/rpc/get_dashboard_overview", {
 assert.ok(dashboard.assignments.some((assignment) => assignment.versionId === imported.versionId));
 assert.ok(dashboard.attempts.some((attempt) => attempt.versionId === imported.versionId));
 
-console.log("Shared assignment visibility and playable access E2E passed");
+const memberDetail = await api("/rest/v1/rpc/get_group_detail_overview", {
+  method: "POST",
+  token: member.token,
+  body: { p_group_id: group.id },
+});
+assert.equal(memberDetail.group.id, group.id);
+assert.equal(memberDetail.currentUserId, member.id);
+assert.equal(memberDetail.role, "member");
+assert.equal(memberDetail.members.length, 2);
+assert.ok(memberDetail.members.some((item) => item.userId === member.id));
+assert.ok(memberDetail.assignments.some((assignment) => assignment.versionId === imported.versionId));
+assert.ok(memberDetail.attempts.some((attempt) => attempt.id === memberStarted.attemptId && Number(attempt.wrongCount) === 1));
+assert.ok(memberDetail.attempts.some((attempt) => attempt.id === ownerStarted.attemptId && Number(attempt.wrongCount) === 0), "regular member should see another member's score summary");
+assert.deepEqual(memberDetail.versions, [], "regular members should not receive the owner's private library list");
+
+const ownerDetail = await api("/rest/v1/rpc/get_group_detail_overview", {
+  method: "POST",
+  token: owner.token,
+  body: { p_group_id: group.id },
+});
+assert.equal(ownerDetail.role, "owner");
+assert.ok(ownerDetail.versions.some((version) => version.id === imported.versionId));
+assert.ok(ownerDetail.attempts.some((attempt) => attempt.id === memberStarted.attemptId && Number(attempt.wrongCount) === 1));
+
+console.log("Shared assignment, shared history summaries and result review payload E2E passed");

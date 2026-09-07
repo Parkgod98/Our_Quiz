@@ -1,6 +1,7 @@
 import { GroupDirectory, type GroupSummary } from "@/components/group-directory";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { logServerError } from "@/lib/server/log-error";
 
 type GroupSummaryRow = {
   id: string;
@@ -16,7 +17,10 @@ export default async function GroupsPage() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("get_my_group_summaries");
 
-  if (error) return <section className="narrow panel"><h1>스터디를 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section>;
+  if (error) {
+    logServerError("groups.list.load", error);
+    return <section className="narrow panel"><h1>스터디를 불러오지 못했어요.</h1><p>오류가 기록됐어요. 잠시 후 다시 시도해 주세요.</p></section>;
+  }
 
   const rows = (data ?? []) as GroupSummaryRow[];
   const groups: GroupSummary[] = rows.map((row) => ({

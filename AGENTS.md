@@ -30,6 +30,7 @@
 - 운영 DB 변경을 SQL Editor 수동 실행 절차로 문서화하지 않습니다. `main`에 merge된 migration은 `.github/workflows/supabase-production.yml`을 통해 자동 적용하는 흐름을 유지합니다.
 - `question_set_versions`와 그 버전에 속한 문제는 Publish 후 불변으로 취급합니다. 수정이 필요하면 새 Version을 만듭니다.
 - 정답 판정은 Client가 아니라 Server가 최종 권한을 갖습니다.
+- 서버/DB/Auth 오류는 사용자용 문구로 바꾸기 전에 `context`, 원본 `message`, 가능한 `code/details/hint`를 서버 로그에 남깁니다. DB 오류나 예상치 못한 조회 실패를 근거 없이 `notFound()`로 숨기지 않습니다. `notFound()`는 실제 미존재 또는 의도적으로 감출 권한 거부에만 사용하고, 그 경우에도 원인을 먼저 기록합니다.
 - `.env*`, 키, 토큰, 실제 사용자 답안 등 민감 정보는 커밋하지 않습니다.
 - 새 의존성은 실제 필요가 있을 때만 추가합니다.
 
