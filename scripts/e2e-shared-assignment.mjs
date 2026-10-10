@@ -236,10 +236,23 @@ assert.ok(memberShareAfter.assignments.some((assignment) => assignment.versionId
 assert.ok(!memberShareAfter.versions.some((version) => version.id === memberImported.versionId),
   "already assigned version should disappear from sharing choices");
 
+const secondGroups = await api("/rest/v1/study_groups?select=id", {
+  method: "POST",
+  token: member.token,
+  headers: { Prefer: "return=representation" },
+  body: { name: "Member Private Isolation Study", created_by: member.id },
+});
+const secondGroupId = secondGroups[0].id;
+await api("/rest/v1/group_members", {
+  method: "POST",
+  token: member.token,
+  headers: { Prefer: "return=minimal" },
+  body: { group_id: secondGroupId, user_id: member.id, role: "owner" },
+});
 const disallowed = await fetch(`${url}/rest/v1/group_question_sets`, {
   method: "POST",
   headers: { apikey: anonKey, Authorization: `Bearer ${member.token}`, "Content-Type": "application/json" },
-  body: JSON.stringify({ group_id: group.id, version_id: imported.versionId, assigned_by: member.id }),
+  body: JSON.stringify({ group_id: secondGroupId, version_id: imported.versionId, assigned_by: member.id }),
 });
 assert.equal(disallowed.ok, false, "member cannot add someone else's private version");
 
