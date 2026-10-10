@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -12,7 +13,7 @@ export function ShareQuestionSetForm({ versionId, groups }: { versionId: string;
   const [message, setMessage] = useState("");
   const available = groups.filter((group) => !group.alreadyShared);
 
-  if (groups.length === 0) return <div className="panel stack"><h2>스터디에 공유하기</h2><p>참여 중인 스터디가 없어요. 스터디를 만들거나 참여한 뒤 공유할 수 있어요.</p><a className="button-link secondary" href="/groups">스터디로 이동</a></div>;
+  if (groups.length === 0) return <div className="panel stack"><h2>스터디에 공유하기</h2><p>참여 중인 스터디가 없어요. 스터디를 만들거나 참여한 뒤 공유할 수 있어요.</p><Link className="button-link secondary" href="/groups">스터디로 이동</Link></div>;
   if (available.length === 0) return <div className="panel stack"><h2>스터디에 공유하기</h2><p>이 버전은 참여 중인 모든 스터디에 이미 공유했어요.</p></div>;
 
   async function share(event: React.FormEvent<HTMLFormElement>) {
