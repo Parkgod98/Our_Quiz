@@ -189,4 +189,66 @@ assert.equal(ownerDetail.role, "owner");
 assert.ok(ownerDetail.versions.some((version) => version.id === imported.versionId));
 assert.ok(ownerDetail.attempts.some((attempt) => attempt.id === memberStarted.attemptId && Number(attempt.wrongCount) === 1));
 
-console.log("Shared assignment, shared history summaries and result review payload E2E passed");
+
+const memberImported = await api("/rest/v1/rpc/import_question_set", {
+  method: "POST",
+  token: member.token,
+  body: {
+    p_payload: {
+      schemaVersion: "1.0",
+      setId: `member-${seed}`.replace(/[^a-z0-9-]/g, "-"),
+      title: "Member Owned Quiz",
+      subject: "Semiconductor",
+      week: 2,
+      version: 1,
+      questions: [{
+        id: "member-001",
+        type: "true_false",
+        topic: "Memory.Basic",
+        difficulty: 1,
+        prompt: "NAND는 비휘발성 메모리다.",
+        answer: true,
+        explanation: "NAND는 전원이 꺼져도 저장된 데이터를 유지한다.",
+      }],
+    },
+  },
+});
+
+const memberShareBefore = await api("/rest/v1/rpc/get_group_detail_overview", {
+  method: "POST", token: member.token, body: { p_group_id: group.id },
+});
+assert.ok(memberShareBefore.versions.some((version) => version.id === memberImported.versionId),
+  "member should see own unassigned version in sharing selector");
+assert.equal(memberShareBefore.versions.some((version) => version.id === imported.versionId), false,
+  "member should never receive another user's private library versions");
+
+await api("/rest/v1/group_question_sets", {
+  method: "POST",
+  token: member.token,
+  headers: { Prefer: "return=minimal" },
+  body: { group_id: group.id, version_id: memberImported.versionId, assigned_by: member.id },
+});
+const memberShareAfter = await api("/rest/v1/rpc/get_group_detail_overview", {
+  method: "POST", token: member.token, body: { p_group_id: group.id },
+});
+assert.ok(memberShareAfter.assignments.some((assignment) => assignment.versionId === memberImported.versionId),
+  "member-owned version should be visible in shared assignments");
+assert.ok(!memberShareAfter.versions.some((version) => version.id === memberImported.versionId),
+  "already assigned version should disappear from sharing choices");
+
+const disallowed = await fetch(`${url}/rest/v1/group_question_sets`, {
+  method: "POST",
+  headers: { apikey: anonKey, Authorization: `Bearer ${member.token}`, "Content-Type": "application/json" },
+  body: JSON.stringify({ group_id: group.id, version_id: imported.versionId, assigned_by: member.id }),
+});
+assert.equal(disallowed.ok, false, "member cannot add someone else's private version");
+
+const outsider = await signup("shared-outsider");
+const outsiderResponse = await fetch(`${url}/rest/v1/group_question_sets`, {
+  method: "POST",
+  headers: { apikey: anonKey, Authorization: `Bearer ${outsider.token}`, "Content-Type": "application/json" },
+  body: JSON.stringify({ group_id: group.id, version_id: memberImported.versionId, assigned_by: outsider.id }),
+});
+assert.equal(outsiderResponse.ok, false, "non-member cannot assign a version to the group");
+
+console.log("Shared assignment, member sharing permissions, history summaries and result review E2E passed");
