@@ -100,10 +100,10 @@ export function GroupDetailTabs({ overview, initialTab = "learning" }: { overvie
     </nav>
 
     {activeTab === "learning" && <div className="stack">
-      {<div className="panel stack">
+      <div className="panel stack">
         <div><h2>문제집 추가</h2><p className="muted">내 보관함에 있는 문제집을 스터디 멤버들과 공유하세요.</p></div>
         <GroupAssignmentForm groupId={overview.group.id} versions={overview.versions} />
-      </div>}
+      </div>
       <div className="stack">
         <div className="section-heading"><h2>함께 풀 문제</h2></div>
         {overview.assignments.length === 0 ? <div className="empty-state"><h3>아직 추가된 문제집이 없어요.</h3><p>{isOwner ? "위에서 첫 문제집을 추가해 보세요." : "운영자가 문제집을 추가하면 여기에서 바로 풀 수 있어요."}</p></div> : overview.assignments.map((assignment) => <article className="study-assignment-card" key={assignment.versionId}>
