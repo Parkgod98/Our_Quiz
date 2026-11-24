@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShareQuestionSetForm } from "@/components/share-question-set-form";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SetDetail = { id: string; title: string; subject: string; week_number: number; description: string | null; question_set_versions: Array<{ id: string; version_number: number; question_count: number; published_at: string }> };
@@ -13,10 +15,20 @@ export default async function LibraryDetailPage({ params }: { params: Promise<{ 
   if (error || !data) notFound();
   const set = data as unknown as SetDetail;
   const versions = [...set.question_set_versions].sort((a, b) => b.version_number - a.version_number);
+  const latestVersion = versions[0];
+  const { data: memberships, error: membershipError } = await supabase.rpc("get_my_group_summaries");
+  if (membershipError) logServerError("library.share.groups", membershipError, { setId });
+  const groupRows = (memberships ?? []) as Array<{ id: string; name: string }>;
+  const { data: assignments, error: assignmentError } = latestVersion && groupRows.length > 0
+    ? await supabase.from("group_question_sets").select("group_id").eq("version_id", latestVersion.id).in("group_id", groupRows.map((group) => group.id))
+    : { data: [], error: null };
+  if (assignmentError) logServerError("library.share.assignments", assignmentError, { setId });
+  const sharedGroupIds = new Set((assignments ?? []).map((item) => item.group_id));
+  const groups = groupRows.map((group) => ({ id: group.id, name: group.name, alreadyShared: sharedGroupIds.has(group.id) }));
 
   return <section className="stack page-section">
     <Link className="back-link" href="/library">← 내 문제집</Link>
-    <div className="library-detail-hero"><span className="week-chip">Week {set.week_number}</span><h1>{set.title}</h1><p>{set.description || set.subject}</p><div className="row"><Link className="button-link" href="/groups">스터디에 추가하기</Link><Link className="button-link secondary" href="/import">새 버전 추가</Link></div></div>
-    <div className="panel stack"><h2>버전</h2>{versions.map((version, index) => <div className="version-row" key={version.id}><div><div className="row"><strong>버전 {version.version_number}</strong>{index === 0 && <span className="current-badge">최신</span>}</div><small>{version.question_count}문제 · {new Date(version.published_at).toLocaleDateString("ko-KR")}</small></div><div className="row"><Link className="button-link secondary" href={`/quiz/${version.id}`}>풀어보기</Link><a className="text-link" href={`/api/question-sets/export/${version.id}`}>JSON 내보내기</a></div></div>)}</div>
+    <div className="library-detail-hero"><span className="week-chip">Week {set.week_number}</span><h1>{set.title}</h1><p>{set.description || set.subject}</p><div className="row"><a className="button-link" href="#share-to-study">스터디에 추가하기</a><Link className="button-link secondary" href="/import">새 버전 추가</Link></div></div>
+    <div id="share-to-study">{membershipError || assignmentError ? <div className="panel"><p>스터디 목록을 불러오지 못했어요. 잠시 후 새로고침해 주세요.</p></div> : latestVersion ? <ShareQuestionSetForm versionId={latestVersion.id} groups={groups} /> : <div className="panel">공유할 문제집 버전이 없어요.</div>}</div><div className="panel stack"><h2>버전</h2>{versions.map((version, index) => <div className="version-row" key={version.id}><div><div className="row"><strong>버전 {version.version_number}</strong>{index === 0 && <span className="current-badge">최신</span>}</div><small>{version.question_count}문제 · {new Date(version.published_at).toLocaleDateString("ko-KR")}</small></div><div className="row"><Link className="button-link secondary" href={`/quiz/${version.id}`}>풀어보기</Link><a className="text-link" href={`/api/question-sets/export/${version.id}`}>JSON 내보내기</a></div></div>)}</div>
   </section>;
 }

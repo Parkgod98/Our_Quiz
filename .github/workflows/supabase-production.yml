@@ -39,18 +39,19 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD" || (echo "SUPABASE_DB_PASSWORD secret is missing" && exit 1)
 
       - name: Link production project
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Reconcile manually applied initial migration
         shell: bash
         run: |
-          if ! supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" | grep -E "202609050001[[:space:]]*\|[[:space:]]*202609050001" >/dev/null; then
+          migration_history="$(supabase migration list --remote)"
+          if ! grep -Eq "202609050001[[:space:]]*\|[[:space:]]*202609050001" <<< "$migration_history"; then
             echo "Initial schema exists from the original manual SQL setup; marking its migration history as applied."
-            supabase migration repair 202609050001 --status applied --linked -p "$SUPABASE_DB_PASSWORD"
+            supabase migration repair 202609050001 --status applied --yes --remote
           fi
 
       - name: Preview pending migrations
-        run: supabase db push --linked --dry-run -p "$SUPABASE_DB_PASSWORD"
+        run: supabase db push --dry-run --remote
 
       - name: Apply pending migrations
-        run: supabase db push --linked -p "$SUPABASE_DB_PASSWORD"
+        run: supabase db push --yes --remote
