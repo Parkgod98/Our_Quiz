@@ -10,7 +10,7 @@
     "validate:questions": "node scripts/validate-question-sets.mjs",
     "validate:repo": "node scripts/validate-repository.mjs",
     "validate:git": "node scripts/validate-git-conventions.mjs",
-    "validate": "npm run validate:repo && npm run validate:questions",
+    "validate": "npm run validate:repo && npm run validate:questions && node scripts/validate-auth-navigation.mjs",
     "test:e2e": "node scripts/e2e-core-flow.mjs && node scripts/e2e-shared-assignment.mjs"
   },
   "dependencies": {
