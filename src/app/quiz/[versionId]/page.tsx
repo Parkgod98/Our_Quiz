@@ -68,5 +68,5 @@ export default async function QuizVersionPage({ params, searchParams }: { params
     }),
   };
 
-  return <section><QuizPlayer questionSet={questionSet} versionId={versionId} groupId={groupId} /></section>;
+  return <section><QuizPlayer key={`${versionId}:${groupId ?? "personal"}`} questionSet={questionSet} versionId={versionId} groupId={groupId} /></section>;
 }

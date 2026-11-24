@@ -7,7 +7,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return NextResponse.json({ error: "Supabase가 연결되지 않았습니다." }, { status: 503 });
   const rawText = await request.text();
-  if (rawText.length > 2_000_000) return NextResponse.json({ error: "Payload는 2MB 이하여야 합니다." }, { status: 413 });
+  if (Buffer.byteLength(rawText, "utf8") > 2_000_000) return NextResponse.json({ error: "파일 크기는 2MB 이하여야 해요." }, { status: 413 });
 
   let input: unknown;
   try {
