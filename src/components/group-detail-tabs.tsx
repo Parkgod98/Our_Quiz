@@ -108,7 +108,7 @@ export function GroupDetailTabs({ overview, initialTab = "learning" }: { overvie
       <div className="stack">
         <div className="section-heading"><h2>함께 풀 문제</h2></div>
         {overview.assignments.length === 0 ? <div className="empty-state"><h3>아직 추가된 문제집이 없어요.</h3><p>위에서 첫 문제집을 공유하면 멤버들이 함께 풀 수 있어요.</p></div> : overview.assignments.map((assignment) => <article className="study-assignment-card" key={assignment.versionId}>
-          <div><span className="eyebrow">WEEK {assignment.weekNumber}</span><h3>{assignment.title}</h3><p>{assignment.subject} · {assignment.questionCount}문제</p></div>
+          <div><span className="eyebrow">WEEK {assignment.weekNumber}</span><h3>{assignment.title}</h3><p>{assignment.subject} · 버전 {assignment.versionNumber} · {assignment.questionCount}문제</p></div>
           <Link className="button-link" href={`/quiz/${assignment.versionId}?groupId=${overview.group.id}`}>풀기</Link>
         </article>)}
       </div>
