@@ -80,6 +80,15 @@ const imported = await api("/rest/v1/rpc/import_question_set", {
   },
 });
 
+const ownerBeforeShare = await api("/rest/v1/rpc/get_group_detail_overview", {
+  method: "POST",
+  token: owner.token,
+  body: { p_group_id: group.id },
+});
+assert.ok(ownerBeforeShare.versions.some((version) => version.id === imported.versionId),
+  "owner should be able to select their unshared version");
+assert.equal(ownerBeforeShare.assignments.length, 0, "importing should not share a version automatically");
+
 await api("/rest/v1/group_question_sets", {
   method: "POST",
   token: owner.token,
@@ -186,7 +195,10 @@ const ownerDetail = await api("/rest/v1/rpc/get_group_detail_overview", {
   body: { p_group_id: group.id },
 });
 assert.equal(ownerDetail.role, "owner");
-assert.ok(ownerDetail.versions.some((version) => version.id === imported.versionId));
+assert.ok(ownerDetail.assignments.some((assignment) => assignment.versionId === imported.versionId),
+  "owner should see their shared version in the group");
+assert.equal(ownerDetail.versions.some((version) => version.id === imported.versionId), false,
+  "owner should no longer be offered a version already shared with this group");
 assert.ok(ownerDetail.attempts.some((attempt) => attempt.id === memberStarted.attemptId && Number(attempt.wrongCount) === 1));
 
 
