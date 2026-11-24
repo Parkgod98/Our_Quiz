@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ReviewPlayer, type ReviewItem } from "@/components/review-player";
+import { logServerError } from "@/lib/server/log-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function ReviewPage() {
@@ -7,7 +8,11 @@ export default async function ReviewPage() {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return <section className="narrow panel"><h1>로그인이 필요해요.</h1><Link className="button-link" href="/auth">로그인하기</Link></section>;
   const { data, error } = await supabase.rpc("get_review_items");
-  const items = (!error && Array.isArray(data) ? data : []) as unknown as ReviewItem[];
+  if (error || !Array.isArray(data)) {
+    logServerError("review.load", error ?? new Error("Unexpected review items response"));
+    return <section className="narrow panel"><h1>오답노트를 불러오지 못했어요.</h1><p>잠시 후 페이지를 새로고침해 주세요.</p></section>;
+  }
+  const items = data as unknown as ReviewItem[];
   const repeated = items.filter((item) => item.wrongCount >= 2).length;
   const topicCount = new Set(items.map((item) => item.topic)).size;
 

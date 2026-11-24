@@ -1,11 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { rootAuthCallback } from "@/lib/auth-callback";
 
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !publishableKey) return NextResponse.next({ request });
+
+  if (request.method === "GET") {
+    const callback = rootAuthCallback(new URL(request.url));
+    if (callback) return NextResponse.rewrite(callback);
+  }
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(url, publishableKey, {

@@ -108,8 +108,8 @@ export function validateQuestionSet(input: unknown): ValidationResult {
             errors.push(`${path}.answer: choices에 존재하는 단일 ID여야 합니다.`);
           }
         } else {
-          if (!Array.isArray(question.answer) || question.answer.length === 0 || question.answer.some((answer) => typeof answer !== "string" || !choiceIds.has(answer))) {
-            errors.push(`${path}.answer: choices에 존재하는 ID 배열이어야 합니다.`);
+          if (!Array.isArray(question.answer) || question.answer.length === 0 || new Set(question.answer).size !== question.answer.length || question.answer.some((answer) => typeof answer !== "string" || !choiceIds.has(answer))) {
+            errors.push(`${path}.answer: choices에 존재하는 고유한 ID 배열이어야 합니다.`);
           }
         }
       }
@@ -126,7 +126,7 @@ export function validateQuestionSet(input: unknown): ValidationResult {
 
       if (question.type === "ordering") {
         const itemIds = validateChoiceArray(question.items, `${path}.items`, errors);
-        if (!Array.isArray(question.answer) || question.answer.length !== itemIds.size || question.answer.some((answer) => typeof answer !== "string" || !itemIds.has(answer))) {
+        if (!Array.isArray(question.answer) || question.answer.length !== itemIds.size || new Set(question.answer).size !== itemIds.size || question.answer.some((answer) => typeof answer !== "string" || !itemIds.has(answer))) {
           errors.push(`${path}.answer: 모든 item ID를 한 번씩 포함한 순서 배열이어야 합니다.`);
         }
       }

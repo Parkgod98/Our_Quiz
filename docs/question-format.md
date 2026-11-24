@@ -132,6 +132,9 @@ Validator는 아래를 거부합니다.
 - 허용 범위 밖 difficulty
 - 선택지에 없는 choice를 정답으로 지정
 - ordering item에 없는 ID를 정답에 지정
+- 복수 선택 정답에 같은 ID를 두 번 포함하거나 순서 정답에서 항목을 누락·중복
 - 질문 Type에 맞지 않는 Answer 자료형
 
 Validator는 정답을 추측해서 고쳐주지 않습니다.
+
+파일을 올리기 전에 `npm run validate:questions -- <문제집.json>`으로 웹 가져오기와 같은 Validator를 실행할 수 있습니다. 파일 경로를 생략하면 저장소의 `examples/*.json`을 검사합니다.

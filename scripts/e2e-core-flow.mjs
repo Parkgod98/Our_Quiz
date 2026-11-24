@@ -132,7 +132,8 @@ async function start(token) {
   });
 }
 
-const attemptA = await start(userA.token);
+const [attemptA, secondTab] = await Promise.all([start(userA.token), start(userA.token)]);
+assert.equal(secondTab.attemptId, attemptA.attemptId, "opening two tabs should resume one attempt");
 const attemptB = await start(userB.token);
 assert.ok(attemptA.attemptId && attemptB.attemptId);
 assert.notEqual(attemptA.attemptId, attemptB.attemptId);
@@ -160,6 +161,17 @@ const resultA = await api("/rest/v1/rpc/submit_existing_attempt", {
 });
 assert.equal(resultA.score, 2);
 assert.equal(resultA.total, 3);
+const retried = await api("/rest/v1/rpc/submit_existing_attempt", {
+  method: "POST",
+  token: userA.token,
+  body: { p_attempt_id: attemptA.attemptId, p_responses: {} },
+});
+assert.deepEqual(retried, resultA, "a retried submission should return the first immutable result");
+await assert.rejects(api("/rest/v1/rpc/save_attempt_response", {
+  method: "POST",
+  token: userA.token,
+  body: { p_attempt_id: attemptA.attemptId, p_question_key: "q-001", p_response: "a" },
+}), /editable attempt not found/, "late autosaves must leave the submitted answers intact");
 
 const resultB = await api("/rest/v1/rpc/submit_existing_attempt", {
   method: "POST",
