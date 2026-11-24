@@ -23,6 +23,12 @@ service_role key
 
 이런 서버 전용 비밀값은 현재 MVP에서 사용하지 않습니다.
 
+## 비밀번호 복구 메일
+
+복구 메일은 Supabase Authentication → URL Configuration에 등록된 운영 사이트의 루트(`/`)로 돌아옵니다. 앱이 루트에서 인증 코드를 받으면 내부 콜백에서 세션을 만들고, 복구 요청은 새 비밀번호 화면으로, 일반 인증은 대시보드로 연결합니다. 기본 복구 메일 템플릿은 Supabase의 `{{ .ConfirmationURL }}` 링크를 사용합니다. 스터디원에게 실제 메일을 보내려면 프로젝트에 해당 수신자에게 발송할 수 있는 SMTP를 구성합니다.
+
+사용자가 복구를 요청한 브라우저에서 메일 링크를 열면 앱이 일회용 코드와 해당 브라우저의 검증값으로 인증 세션을 얻습니다. 새 비밀번호는 그 세션으로 로그인한 본인 계정에 저장됩니다. [Supabase 비밀번호 인증 문서](https://supabase.com/docs/guides/auth/passwords)
+
 ## 등록 위치
 
 Vercel Project → Settings → Environment Variables에서 두 값을 등록합니다.
